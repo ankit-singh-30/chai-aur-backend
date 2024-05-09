@@ -15,14 +15,14 @@ const registerUser = asyncHandler(async (req, res) => {
   // check for user creation
   // return response
 
-  const { username, fullname, email, password } = req.body;
+  const { username, fullName, email, password } = req.body;
   if (
-    [fullname, username, email, password].some((filed) => filed?.trim() === "")
+    [fullName, username, email, password].some((filed) => filed?.trim() === "")
   ) {
     throw new ApiError(400, "All Fileds are required");
   }
 
-  const existedUser = User.findOne({
+  const existedUser = await User.findOne({
     $or: [{ username }, { email }],
   });
 
@@ -34,7 +34,15 @@ const registerUser = asyncHandler(async (req, res) => {
   //console.log(req.files);
 
   const avtarLocalPath = req.files?.avtar[0]?.path;
-  const coverLocalPath = req.files?.coverImage[0]?.path;
+  // const coverLocalPath = req.files?.coverImage[0]?.path;
+  let coverLocalPath;
+  if (
+    req.files &&
+    Array.isArray(req.files.coverImage) &&
+    req.files.coverImage.length > 0
+  ) {
+    coverLocalPath = req.files.coverImage[0].path;
+  }
 
   if (!avtarLocalPath) {
     throw new ApiError(400, "Avtar File is required");
@@ -48,7 +56,7 @@ const registerUser = asyncHandler(async (req, res) => {
   }
 
   const user = await User.create({
-    fullname,
+    fullName,
     avtar: avtar.url,
     coverImage: coverImage?.url || "",
     email,
